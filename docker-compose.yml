@@ -1,0 +1,165 @@
+services:
+  db: # Service name
+    image: postgis/postgis:17-3.5
+    container_name: postgres_17
+    restart: always
+    env_file:
+      - db.env
+    ports:
+      - "5432:5432"  # Maps host port 5432 to container port 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persists data outside the container
+      # - ./initdb:/docker-entrypoint-initdb.d # for initialization .sql / .sh scripts
+    networks:
+      - my_data_flow_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d my_database"]
+      interval: 1m
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    depends_on:
+      db:  # Ensures the database starts before pgAdmin
+        condition: service_healthy
+    env_file:
+      - pg.env
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin  # Persists pgAdmin data
+    networks:
+      - my_data_flow_network
+
+  spark-master:
+    image: spark:4.0.0-scala2.13-java21-ubuntu
+    container_name: spark_master
+    command: ["sh", "-c", "/opt/spark/sbin/start-master.sh && tail -f /opt/spark/logs/*"]
+    restart: always
+    depends_on:
+      - db
+        # condition: service_healthy
+    environment:
+      - SPARK_MODE=master
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8082
+    ports:
+      - "7077:7077"  # Spark master port
+      - "8082:8082"  # Spark master web UI port
+    volumes:
+      - ./scripts:/opt/spark/scripts
+      - ./data:/opt/spark/data
+      - spark-logs:/opt/spark/spark-events
+    networks:
+      - my_data_flow_network
+    # healthcheck:
+    #   test: ["CMD-SHELL", "nc -z http://localhost:8082 || exit 1"]
+    #   interval: 2m
+    #   timeout: 1m
+    #   retries: 5
+    #   start_period: 2m
+
+  spark-history-server:
+    image: spark:4.0.0-scala2.13-java21-ubuntu
+    container_name: spark_history_server
+    command: ["sh", "-c", "/opt/spark/sbin/start-history-server.sh && tail -f /opt/spark/logs/*"]
+    restart: always
+    depends_on:
+      - db
+        # condition: service_healthy
+      - spark-master
+      #   condition: service_healthy
+    environment:
+      - SPARK_MODE=history-server
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=/opt/spark/spark-events
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_HISTORY_WEBUI_PORT=18080
+    ports:
+      - "18080:18080"  # Spark history server web UI port
+    volumes:
+      - ./scripts:/opt/spark/scripts
+      - ./data:/opt/spark/data
+      - spark-logs:/opt/spark/spark-events
+    networks:
+      - my_data_flow_network
+    # healthcheck:
+    #   test: ["CMD-SHELL", "nc -z http://localhost:18080 || exit 1"]
+    #   interval: 2m  
+    #   timeout: 1m
+    #   retries: 5
+    #   start_period: 60s
+
+  spark-worker:
+    image: spark:4.0.0-scala2.13-java21-ubuntu
+    container_name: spark_worker
+    command: ["sh", "-c", "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 && tail -f /opt/spark/logs/*"]
+    restart: always
+    depends_on:
+      - spark-master
+        # condition: service_healthy
+      - spark-history-server
+        # condition: service_healthy
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_WORKER_WEBUI_PORT=8081
+    ports:
+      - "8081:8081"  # Spark worker web UI port
+    volumes:
+      - ./scripts:/opt/spark/scripts
+      - ./data:/opt/spark/data
+      - spark-logs:/opt/spark/spark-events
+    networks:
+      - my_data_flow_network
+
+  spark-jupyter:
+    build: .
+    container_name: spark_jupyter
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--LabApp.user_settings_dir=/app/.jupyter/lab/user-settings", "--LabApp.workspaces_dir=/app/.jupyter/lab/workspaces"]
+    restart: always
+    depends_on:
+      - spark-master
+      - spark-history-server
+      - spark-worker
+    env_file:
+      - jupyter.env
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/app  # Mounts local notebooks directory to container
+    networks:
+      - my_data_flow_network
+
+volumes:
+  postgres_data:
+    driver: local # Local drive  
+  pgadmin_data:
+    driver: local
+  spark-logs:
+    driver: local
+  
+  
+
+networks:
+  my_data_flow_network: # Private network for container communication
+    driver: bridge # Isolated Network on Host

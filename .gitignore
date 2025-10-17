@@ -1,0 +1,7 @@
+*.txt
+*.log
+*.csv
+*.env
+*.jupyterlab-workspace
+*.jupyterlab-settings
+.ipynb_checkpoints/
