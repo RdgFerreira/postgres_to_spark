@@ -36,7 +36,8 @@ services:
       - my_data_flow_network
 
   spark-master:
-    image: spark:4.0.0-scala2.13-java21-ubuntu
+    # image: spark:4.0.0-scala2.13-java21-ubuntu
+    image: postgres_to_spark-spark-jupyter
     container_name: spark_master
     command: ["sh", "-c", "/opt/spark/sbin/start-master.sh && tail -f /opt/spark/logs/*"]
     restart: always
@@ -69,7 +70,8 @@ services:
     #   start_period: 2m
 
   spark-history-server:
-    image: spark:4.0.0-scala2.13-java21-ubuntu
+    # image: spark:4.0.0-scala2.13-java21-ubuntu
+    image: postgres_to_spark-spark-jupyter
     container_name: spark_history_server
     command: ["sh", "-c", "/opt/spark/sbin/start-history-server.sh && tail -f /opt/spark/logs/*"]
     restart: always
@@ -103,7 +105,8 @@ services:
     #   start_period: 60s
 
   spark-worker:
-    image: spark:4.0.0-scala2.13-java21-ubuntu
+    # image: spark:4.0.0-scala2.13-java21-ubuntu
+    image: postgres_to_spark-spark-jupyter
     container_name: spark_worker
     command: ["sh", "-c", "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 && tail -f /opt/spark/logs/*"]
     restart: always
@@ -146,7 +149,9 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ./notebooks:/app  # Mounts local notebooks directory to container
+    # Mounts local notebooks (folder "notebooks" on host is mapped to /app in container) 
+    # directory to container
+      - ./notebooks:/app
     networks:
       - my_data_flow_network
 
