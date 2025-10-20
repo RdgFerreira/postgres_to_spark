@@ -6,3 +6,4 @@
 *.jupyterlab-workspace
 *.jupyterlab-settings
 .ipynb_checkpoints/
+output.ipynb
