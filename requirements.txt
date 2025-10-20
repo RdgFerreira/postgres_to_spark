@@ -1,0 +1,4 @@
+jupyterlab==4.2.5  # Latest JupyterLab as of October 2025
+pyspark==4.0.0     # Matches Spark version
+pandas==2.3.3
+python-dotenv==1.1.1
