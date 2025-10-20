@@ -5,8 +5,11 @@ up:
 down: 
 	docker compose down
 
+build: 
+	docker compose build
+
 down_up: 
-	docker compose down && docker compose build && docker compose up
+	docker compose down && docker compose up
 
 clean:
 	docker compose down && docker system prune -f && docker image prune -f && docker volume prune -f
