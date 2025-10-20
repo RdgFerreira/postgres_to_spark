@@ -6,7 +6,10 @@ down:
 	docker compose down
 
 down_up: 
-	docker compose down && docker compose up
+	docker compose down && docker compose build && docker compose up
+
+clean:
+	docker compose down && docker system prune -f && docker image prune -f && docker volume prune -f
 
 dev: 
 	docker exec -it spark-master bash
