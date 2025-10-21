@@ -7,3 +7,4 @@
 *.jupyterlab-settings
 .ipynb_checkpoints/
 output.ipynb
+/notebooks/work/

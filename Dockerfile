@@ -7,8 +7,11 @@ RUN set -ex; \
     rm -rf /var/lib/apt/lists/*
 RUN pip install -r requirements.txt
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+RUN wget https://jdbc.postgresql.org/download/postgresql-42.7.8.jar -O /opt/spark/jars/postgresql-42.7.8.jar
 RUN mkdir -p /home/spark && \
     chown -R spark:spark /home/spark
-USER spark
+# USER spark
+# RUN chmod u+x /opt/spark/sbin/* && \
+#     chmod u+x /opt/spark/bin/*
 WORKDIR /app
 EXPOSE 8888

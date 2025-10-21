@@ -60,6 +60,8 @@ services:
       - ./scripts:/opt/spark/scripts
       - ./data:/opt/spark/data
       - spark-logs:/opt/spark/spark-events
+      - ./jobs:/app
+      # - ./spark_tmp:/tmp/spark_tmp
     networks:
       - my_data_flow_network
     # healthcheck:
@@ -95,6 +97,7 @@ services:
       - ./scripts:/opt/spark/scripts
       - ./data:/opt/spark/data
       - spark-logs:/opt/spark/spark-events
+      - ./jobs:/app
     networks:
       - my_data_flow_network
     # healthcheck:
@@ -132,6 +135,7 @@ services:
       - ./scripts:/opt/spark/scripts
       - ./data:/opt/spark/data
       - spark-logs:/opt/spark/spark-events
+      - ./jobs:/app
     networks:
       - my_data_flow_network
 
@@ -155,6 +159,24 @@ services:
     networks:
       - my_data_flow_network
 
+  # airflow:
+  #   build:
+  #     context: ./airflow
+  #   container_name: airflow
+  #   restart: always
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - airflow/.env
+  #   ports:
+  #     - "8085:8085"  # Maps host port 8085 to container port 8085 (Airflow UI)
+  #   volumes:
+  #     - ./airflow/dags:/opt/airflow/dags
+  #     - ./airflow/logs:/opt/airflow/logs
+  #     - ./airflow/plugins:/opt/airflow/plugins
+  #   networks:
+  #     - my_data_flow_network
+
 volumes:
   postgres_data:
     driver: local # Local drive  
@@ -162,8 +184,6 @@ volumes:
     driver: local
   spark-logs:
     driver: local
-  
-  
 
 networks:
   my_data_flow_network: # Private network for container communication

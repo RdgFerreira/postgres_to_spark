@@ -14,6 +14,12 @@ down_up:
 clean:
 	docker compose down && docker system prune -f && docker image prune -f && docker volume prune -f
 
+clean_build_restart: 
+	make clean && make build && make clean && make up
+
+clean_restart:
+	make clean && make up
+
 dev: 
 	docker exec -it spark-master bash
 
@@ -23,5 +29,7 @@ run-scaled:
 stop: 
 	docker-compose stop
 
+# submit single job to spark cluster
+# usage: make submit app=<path/to/app_file.py>
 submit: 
-	docker exec spark-master spark-submit --master spark://spark-master:7077 --deploy-mode client ./apps/$(app)
+	docker exec spark_master spark-submit --master spark://spark-master:7077 --deploy-mode client ./$(app)
