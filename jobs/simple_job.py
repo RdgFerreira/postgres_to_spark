@@ -41,7 +41,7 @@ if __name__ == "__main__":
     result = spark.sql("""
         SELECT COUNT(*)
         FROM ddn_mapa_view as dmv
-        WHERE dmv.vl_tempo_segundos < 1800
+        WHERE dmv.vl_tempo_segundos = 1800
     """)
 
     custom_filename = "query_result.csv"

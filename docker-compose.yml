@@ -9,7 +9,6 @@ services:
       - "5432:5432"  # Maps host port 5432 to container port 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data # Persists data outside the container
-      # - ./initdb:/docker-entrypoint-initdb.d # for initialization .sql / .sh scripts
     networks:
       - my_data_flow_network
     healthcheck:
@@ -36,14 +35,12 @@ services:
       - my_data_flow_network
 
   spark-master:
-    # image: spark:4.0.0-scala2.13-java21-ubuntu
     image: postgres_to_spark-spark-jupyter
     container_name: spark_master
     command: ["sh", "-c", "/opt/spark/sbin/start-master.sh && tail -f /opt/spark/logs/*"]
     restart: always
     depends_on:
       - db
-        # condition: service_healthy
     environment:
       - SPARK_MODE=master
       - SPARK_NO_DAEMONIZE=true
@@ -61,27 +58,16 @@ services:
       - ./data:/opt/spark/data
       - spark-logs:/opt/spark/spark-events
       - ./jobs:/app
-      # - ./spark_tmp:/tmp/spark_tmp
     networks:
       - my_data_flow_network
-    # healthcheck:
-    #   test: ["CMD-SHELL", "nc -z http://localhost:8082 || exit 1"]
-    #   interval: 2m
-    #   timeout: 1m
-    #   retries: 5
-    #   start_period: 2m
 
   spark-history-server:
-    # image: spark:4.0.0-scala2.13-java21-ubuntu
     image: postgres_to_spark-spark-jupyter
     container_name: spark_history_server
     command: ["sh", "-c", "/opt/spark/sbin/start-history-server.sh && tail -f /opt/spark/logs/*"]
     restart: always
     depends_on:
-      - db
-        # condition: service_healthy
       - spark-master
-      #   condition: service_healthy
     environment:
       - SPARK_MODE=history-server
       - SPARK_NO_DAEMONIZE=true
@@ -97,27 +83,16 @@ services:
       - ./scripts:/opt/spark/scripts
       - ./data:/opt/spark/data
       - spark-logs:/opt/spark/spark-events
-      - ./jobs:/app
     networks:
       - my_data_flow_network
-    # healthcheck:
-    #   test: ["CMD-SHELL", "nc -z http://localhost:18080 || exit 1"]
-    #   interval: 2m  
-    #   timeout: 1m
-    #   retries: 5
-    #   start_period: 60s
 
   spark-worker:
-    # image: spark:4.0.0-scala2.13-java21-ubuntu
     image: postgres_to_spark-spark-jupyter
     container_name: spark_worker
     command: ["sh", "-c", "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 && tail -f /opt/spark/logs/*"]
     restart: always
     depends_on:
       - spark-master
-        # condition: service_healthy
-      - spark-history-server
-        # condition: service_healthy
     environment:
       - SPARK_MODE=worker
       - SPARK_NO_DAEMONIZE=true
@@ -135,27 +110,23 @@ services:
       - ./scripts:/opt/spark/scripts
       - ./data:/opt/spark/data
       - spark-logs:/opt/spark/spark-events
-      - ./jobs:/app
     networks:
       - my_data_flow_network
 
   spark-jupyter:
     build: .
     container_name: spark_jupyter
-    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--LabApp.user_settings_dir=/app/.jupyter/lab/user-settings", "--LabApp.workspaces_dir=/app/.jupyter/lab/workspaces"]
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
     restart: always
     depends_on:
       - spark-master
-      - spark-history-server
-      - spark-worker
     env_file:
       - jupyter.env
     ports:
       - "8888:8888"
     volumes:
-    # Mounts local notebooks (folder "notebooks" on host is mapped to /app in container) 
-    # directory to container
-      - ./notebooks:/app
+      # Mounts local notebooks (folder "jobs" on host is mapped to /app in both spark-master and spark-jupyter containers)
+      - ./jobs:/app
     networks:
       - my_data_flow_network
 
