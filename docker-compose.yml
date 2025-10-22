@@ -133,21 +133,54 @@ services:
 
   # airflow:
   #   build:
-  #     context: ./airflow
+  #     context: ./dags
   #   container_name: airflow
+  #   command: 
   #   restart: always
   #   depends_on:
   #     - db
-  #   env_file:
-  #     - airflow/.env
+  #   # env_file:
+  #   #   - dags/.env
   #   ports:
   #     - "8085:8085"  # Maps host port 8085 to container port 8085 (Airflow UI)
   #   volumes:
-  #     - ./airflow/dags:/opt/airflow/dags
-  #     - ./airflow/logs:/opt/airflow/logs
-  #     - ./airflow/plugins:/opt/airflow/plugins
+  #     - ./dags:/opt/airflow/dags
+  #     - ./logs:/opt/airflow/logs
+  #     - ./plugins:/opt/airflow/plugins
   #   networks:
   #     - my_data_flow_network
+
+  scheduler:
+    build:
+      context: ./dags
+    container_name: scheduler
+    command: bash -c "airflow db migrate && airflow scheduler"
+    depends_on:
+      - db
+    env_file:
+      - dags/.env
+    networks:
+      - my_data_flow_network
+
+  api-server:
+    build:
+      context: ./dags
+    container_name: api-server
+    command: bash -c "airflow api-server"
+    env_file:
+      - dags/.env
+    restart: always
+    depends_on:
+      - scheduler
+    ports:
+      - "8086:8080"  # Maps host port 8086 to container port 8080 (Airflow API Server)
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    networks:
+      - my_data_flow_network
+
 
 volumes:
   postgres_data:
