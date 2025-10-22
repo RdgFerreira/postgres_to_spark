@@ -10,7 +10,7 @@ if __name__ == "__main__":
     spark = SparkSession.builder \
         .appName("PostgreSQL-Spark Connection") \
         .master("spark://spark-master:7077") \
-        .config("spark.jars.packages", "org.postgresql:postgresql:42.6.0") \
+        .config("spark.jars.packages", "org.postgresql:postgresql:42.7.8") \
         .config("spark.executor.memory", "1g") \
         .config("spark.driver.memory", "1g") \
         .config("spark.executor.cores", "1") \

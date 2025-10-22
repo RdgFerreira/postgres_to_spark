@@ -8,3 +8,6 @@
 .ipynb_checkpoints/
 output.ipynb
 /notebooks/work/
+*.log
+*.pyc
+latest

@@ -1,7 +1,6 @@
 up: 
 	docker compose up
 
-# 	docker compose down --rmi all
 down: 
 	docker compose down
 
@@ -20,6 +19,9 @@ clean_build_restart:
 clean_restart:
 	make clean && make up
 
+remove_all_volumes:
+	docker volume rm $(docker volume ls -qf dangling=true)
+
 dev: 
 	docker exec -it spark-master bash
 
@@ -33,3 +35,5 @@ stop:
 # usage: make submit app=<path/to/app_file.py>
 submit: 
 	docker exec spark_master spark-submit --master spark://spark-master:7077 --deploy-mode client ./$(app)
+
+# Inside scheduler: airflow dags reserialize to visualize errors in dag python files

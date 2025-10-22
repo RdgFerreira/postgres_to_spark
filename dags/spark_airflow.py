@@ -1,15 +1,16 @@
 import airflow
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from datetime import datetime, timedelta
+from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
 dag = DAG(
     dag_id = "spark_postgres_job",
     default_args = {
         "owner": "airflow",
-        "start_date": airflow.utils.dates.days_ago(1),
     },
-    schedule_interval = None,
+    start_date=datetime(2024, 1, 1),
+    schedule=timedelta(days=1)
 )
 
 start = PythonOperator(

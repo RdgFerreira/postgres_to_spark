@@ -131,25 +131,6 @@ services:
     networks:
       - my_data_flow_network
 
-  # airflow:
-  #   build:
-  #     context: ./dags
-  #   container_name: airflow
-  #   command: 
-  #   restart: always
-  #   depends_on:
-  #     - db
-  #   # env_file:
-  #   #   - dags/.env
-  #   ports:
-  #     - "8085:8085"  # Maps host port 8085 to container port 8085 (Airflow UI)
-  #   volumes:
-  #     - ./dags:/opt/airflow/dags
-  #     - ./logs:/opt/airflow/logs
-  #     - ./plugins:/opt/airflow/plugins
-  #   networks:
-  #     - my_data_flow_network
-
   scheduler:
     build:
       context: ./dags
@@ -159,6 +140,10 @@ services:
       - db
     env_file:
       - dags/.env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
     networks:
       - my_data_flow_network
 
