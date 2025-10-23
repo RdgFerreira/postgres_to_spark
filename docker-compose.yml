@@ -37,6 +37,7 @@ services:
   spark-master:
     image: postgres_to_spark-spark-jupyter
     container_name: spark_master
+    hostname: spark-master
     command: ["sh", "-c", "/opt/spark/sbin/start-master.sh && tail -f /opt/spark/logs/*"]
     restart: always
     depends_on:
@@ -135,7 +136,7 @@ services:
     build:
       context: ./dags
     container_name: scheduler
-    command: bash -c "airflow db migrate && airflow scheduler"
+    command: bash -c "airflow scheduler"
     depends_on:
       - db
     env_file:
