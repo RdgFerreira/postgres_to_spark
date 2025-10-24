@@ -136,11 +136,17 @@ services:
     build:
       context: ./dags
     container_name: scheduler
-    command: bash -c "airflow scheduler"
+    hostname: airflow-host
+    command: bash -c "airflow scheduler --verbose"
     depends_on:
       - db
     env_file:
       - dags/.env
+    ports:
+      - "8087:8080"  # Add log server port
+    environment:
+      - AIRFLOW__LOGGING__WORKER_LOG_SERVER_HOST=0.0.0 # Listen on all interfaces
+      - AIRFLOW__LOGGING__WORKER_LOG_SERVER_PORT=8793
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -152,7 +158,8 @@ services:
     build:
       context: ./dags
     container_name: api-server
-    command: bash -c "airflow api-server"
+    hostname: airflow-host
+    command: bash -c "airflow db migrate && airflow api-server"
     env_file:
       - dags/.env
     restart: always

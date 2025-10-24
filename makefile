@@ -1,6 +1,9 @@
 up: 
 	docker compose up
 
+up_database: 
+	docker compose up db pgadmin
+
 down: 
 	docker compose down
 
@@ -45,3 +48,4 @@ submit:
 
 # Inside scheduler: airflow dags reserialize to visualize errors in dag python files
 # docker exec scheduler airflow dags reserialize
+# Inside api-server: airflow connections test spark_default

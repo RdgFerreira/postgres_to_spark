@@ -33,8 +33,9 @@ RUN pip install apache-airflow-providers-apache-spark
 
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 ENV AIRFLOW_HOME=/opt/airflow
-ENV PYTHONPATH="${PYTHONPATH}:${AIRFLOW_HOME}"
+ENV PYTHONPATH=${AIRFLOW_HOME}/dags:${PYTHONPATH}
 WORKDIR ${AIRFLOW_HOME}
 # RUN wget https://jdbc.postgresql.org/download/postgresql-42.7.8.jar -O /opt/spark/jars/postgresql-42.7.8.jar
 
 USER airflow
+EXPOSE 8793
